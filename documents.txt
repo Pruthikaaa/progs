@@ -1,0 +1,1373 @@
+PROCESS REALTED COMMANDS
+
+1) FORK()
+
+import os
+print("Before fork, PID:", os.getpid())
+pid = os.fork()
+if pid == 0:
+    print("Child: PID =", os.getpid(), "PPID =", os.getppid())
+else:
+    print("Parent: PID =", os.getpid(), "created child PID =", pid)
+
+
+2) WAIT()
+
+import os
+def main():
+    pid = os.fork()
+    if pid == 0:
+        print("Child: My PID is {}".format(os.getpid()))
+    else:
+        print("Parent: Waiting for child to finish...")
+        os.wait()
+        print("Parent: Child process has finished.")
+
+if __name__ == "__main__":
+    main()
+
+3) EXEC()
+import os
+pid = os.fork()
+if pid == 0:
+    print("\nChild 1 (execlp): Running ls -l")
+    os.execlp("ls", "ls", "-l")
+else:
+    os.wait()
+pid2 = os.fork()
+if pid2 == 0:
+    print("\nChild 2 (execv): Running ls -a")
+    os.execv("/bin/ls", ["ls", "-a"])
+else:
+    os.wait()
+print("Parent: both children completed")
+
+
+4) EXECLP()
+import os
+pid = os.fork()
+if pid == 0:
+    print("Child: Executing 'date' command using exec...")
+    os.execlp("date", "date")
+else:
+    os.wait()
+    print("Parent: Child has finished.")
+
+
+5) EXIT()
+import os
+pid = os.fork()
+if pid == 0:
+    print("Child: Doing some work...")
+    os._exit(0)
+else:
+    os.wait()
+    print("Parent: Continuing the process..")
+
+
+6) NICE()
+import os
+pid = os.fork()
+os.nice(10)
+if pid == 0:
+    print("Child: PID={}, Nice value increased".format(os.getpid()))
+else:
+    print("Parent: PID={}, Normal priority".format(os.getpid()))
+    os.wait()
+
+
+7) SLEEP()
+
+import time
+import os
+print("PID:", os.getpid(), "Sleeping for 3 seconds...")
+time.sleep(3)
+print("Awake now!")
+
+
+8) PARENT CREATES N CHILDREN
+
+import os
+import time
+N = 3
+for i in range(N):
+    pid = os.fork()
+    if pid == 0:
+        print(f"Child {i}: PID={os.getpid()}, PPID={os.getppid()}")
+        time.sleep(1)
+        os._exit(0)
+for i in range(N):
+    finished_pid, status = os.wait()
+    print("Parent: child", finished_pid, "exited with status", status)
+
+
+9) ASSIGNING TASK TO CHILD & EXECUTION USING WAIT
+
+import os
+import time
+pid = os.fork()
+if pid == 0:
+    # Child: simple task
+    total = 0
+    for i in range(1, 6):
+        total += i
+    print("Child: sum 1..5 =", total)
+    os._exit(0)
+else:
+    print("Parent: waiting for child to finish task...")
+    os.wait()
+    print("Parent: child finished, continuing...")
+
+
+10) SUM OF EVEN AND ODD
+
+import os
+numbers = range(1, 11)  # 1 to 10
+pid = os.fork()
+if pid == 0:
+    s = sum(n for n in numbers if n % 2 == 1)
+    print("Child: sum of odd numbers =", s)
+    os._exit(0)
+else:
+    s = sum(n for n in numbers if n % 2 == 0)
+    print("Parent: sum of even numbers =", s)
+    os.wait()
+
+
+11) ORPHAN PROCESS
+
+import os
+import time
+pid = os.fork()
+if pid == 0:
+    print("Child: PID =", os.getpid(), "PPID before sleep =", os.getppid())
+    time.sleep(5)
+    print("Child: PID =", os.getpid(), "PPID after parent exit =", os.getppid())
+    os._exit(0)
+else:
+    print("Parent: PID =", os.getpid(), "exiting immediately...")
+    os._exit(0) 
+
+
+12) ZOMBIE PROCESS
+
+import os
+import time
+pid = os.fork()
+if pid == 0:
+    print("Child: exiting quickly")
+    os._exit(0)
+else:
+    print("Parent: child PID =", pid)
+    print("Parent: sleeping 20 seconds WITHOUT wait (check 'ps -l')")
+    time.sleep(20)
+    os.wait()
+
+13) DOLPHIN PROCESS
+
+import os
+import time
+pid = os.fork()
+if pid == 0:
+    print("Child: quick work then exit")
+    time.sleep(1)
+    print("Child: done, exiting")
+    os._exit(0)
+else:
+    print("Parent: doing its own work while child runs...")
+    for i in range(3):
+        print("Parent: working step", i)
+        time.sleep(2)
+    finished_pid, status = os.wait()
+    print("Parent: finally waited, child", finished_pid, "status", status)
+
+------------------------------------------------------------------------------------------------------------------------------------------
+SHELL PROGRAMMING
+
+vi prog.sh
+i
+code
+esc :wq enter
+chmod +x prog.sh
+./prog.sh
+
+1) DATE
+echo "Today's Date: $(date + '%Y-%m-%d')"
+echo "Date in Words: $(date + '%A, %B %d, %Y')"
+
+2) SUM OF SERIES
+echo "Enter the upper limit (N) for the series:"
+read N
+sum=0
+for (( i=1; i<=N; i++))
+do
+    sum=$((sum+i))
+done
+echo "The sum of the series from 1 to $N is: $sum"
+
+3) PALINDROME NUMBER
+echo -n "Enter a number: "
+read num
+original_num=$num
+rev=0
+while [ $num -gt 0 ]; do
+    remainder=$((num % 10))
+    rev=$((rev * 10 + remainder))
+    num=$((num / 10))
+done
+if [ $original_num -eq $rev ]; then
+    echo "$original_num is a palindrome number."
+else
+    echo "$original_num is not a palindrome number."
+fi
+----
+read -p "Enter text/number: " str
+rev=$(echo "$str" | rev)
+if [ "$str" == "$rev" ]; then echo "Palindrome"; else echo "Not palindrome"; fi
+
+
+4) GCD
+gcd() {
+    local a=$1
+    local b=$2
+    while [ "$b" -ne 0 ]; do
+        local temp=$b
+        b=$((a % b))
+        a=$temp
+    done
+    echo "$a"
+}
+
+echo "Enter the first number:"
+read num1
+echo "Enter the second number:"
+read num2
+
+if ! [[ "$num1" =~ ^[0-9]+$ ]] || ! [[ "$num2" =~ ^[0-9]+$ ]]; then
+    echo "Error: Please enter valid positive integers."
+    exit 1
+fi
+result=$(gcd "$num1" "$num2")
+echo "The GCD of $num1 and $num2 is: $result"
+---
+read -p "Enter first number: " a
+read -p "Enter second number: " b
+while [ $b -ne 0 ]
+do
+    temp=$b
+    b=$((a % b))
+    a=$temp
+done
+echo "GCF/GCD = $a"
+
+5) ARMSTRONG
+echo "Enter a number:"
+read num
+a=$num
+len=${#num}
+sum=0
+for (( i=0; i<len; i++))
+do
+    d=${num:i:1}
+    p=$((d**len))
+    sum=$((sum+p))
+done
+if [ $sum -eq $a ]; then
+    echo "$a is an Armstrong number"
+else
+    echo "$a is not an Armstrong number"
+fi
+
+6) PRIME NUMBER
+read -p "Enter a number: " num 
+if [ $num -le 1 ]; then 
+    echo "$num is NOT a prime number" 
+    exit 
+fi 
+ 
+for (( i=2; i*i<=num; i++ )) 
+do 
+    if [ $((num % i)) -eq 0 ]; then 
+        echo "$num is NOT a prime number" 
+        exit 
+    fi 
+done 
+ 
+echo "$num is a Prime number"
+
+7) FACTORIAL
+read -p "Enter a number: " num 
+fact=1 
+ 
+for (( i=1; i<=num; i++ )) 
+do 
+    fact=$((fact * i)) 
+done 
+ 
+echo "Factorial of $num is $fact" 
+
+8) REVERSE
+read -p "Enter number: " n
+rev=$(echo "$n" | rev)
+echo "Reverse = $rev"
+
+9) FIBONACCI SERIES
+read -p "Enter number of terms: " n
+a=0; b=1
+echo -n "$a $b "
+for (( i=3; i<=n; i++ ))
+do
+    c=$((a+b))
+    echo -n "$c "
+    a=$b; b=$c
+done
+echo
+
+9) EVEN OR ODD
+read -p "Enter a number: " n
+if (( n%2==0 )); then echo "Even"; else echo "Odd"; fi
+
+10) MINOR OR MAJOR
+read -p "Enter your age: " age
+if [ "$age" -ge 18 ]; then
+    echo "You are a Major"
+else
+    echo "You are a Minor"
+fi
+
+11) MULTIPICATION TABLE
+read -p "Enter a number: " num
+for ((i=1;i<=10;i++))
+do
+    echo "$num * $i = $((num*i))"
+done
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CPU SCHEDULING
+
+1) ALL WITHOUT GANTT CHART
+# Processes: [PID, Arrival, Burst]
+processes = [
+    [1, 0, 4],
+    [2, 1, 2],
+    [3, 2, 6],
+    [4, 3, 3]
+]
+
+print("1) Round-Robin")
+print("2) Shortest Job First (Preemptive Scheduling)")
+print("3) Shortest Job First (Non-Preemptive Scheduling)")
+print("4) First-Come First-Serve")
+
+n = int(input("Enter the scheduling algorithm: "))
+
+quantum = None
+if n == 1:
+    quantum = int(input("Enter Time Quantum: "))
+
+# ---------------- Utility Functions ----------------
+
+def print_table(processes, tat, wt, total_time):
+    print("\nProcess\tArrival\tBurst\tTAT\tWT")
+    for p in processes:
+        print("P{}\t{}\t{}\t{}\t{}".format(p[0], p[1], p[2], tat[p[0]], wt[p[0]]))
+
+    total_tat = sum(tat.values())
+    total_wt = sum(wt.values())
+    avg_tat = total_tat / len(processes)
+    avg_wt = total_wt / len(processes)
+
+    print(f"\nTotal Turnaround Time: {total_tat}")
+    print(f"Average Turnaround Time: {avg_tat:.2f}")
+    print(f"Total Waiting Time: {total_wt}")
+    print(f"Average Waiting Time: {avg_wt:.2f}")
+    print(f"Total Execution Time: {total_time}")
+
+# ---------------- FCFS ----------------
+def fcfs(processes):
+    time = 0
+    tat, wt = {}, {}
+    for pid, at, bt in sorted(processes, key=lambda x: x[1]):
+        if time < at:  # idle
+            time = at
+        end = time + bt
+        time = end
+        tat[pid] = end - at
+        wt[pid] = tat[pid] - bt
+    print_table(processes, tat, wt, time)
+
+# ---------------- SJF Non-Preemptive ----------------
+def sjf_non_preemptive(processes):
+    time = 0
+    tat, wt = {}, {}
+    ready = []
+    processes_left = processes[:]
+    while processes_left or ready:
+        for p in processes_left[:]:
+            if p[1] <= time:
+                ready.append(p)
+                processes_left.remove(p)
+        if not ready:
+            time += 1
+            continue
+        ready.sort(key=lambda x: x[2])
+        pid, at, bt = ready.pop(0)
+        end = time + bt
+        time = end
+        tat[pid] = end - at
+        wt[pid] = tat[pid] - bt
+    print_table(processes, tat, wt, time)
+
+# ---------------- SJF Preemptive ----------------
+def sjf_preemptive(processes):
+    time = 0
+    tat, wt = {}, {}
+    rem_bt = {p[0]: p[2] for p in processes}
+    arrival = {p[0]: p[1] for p in processes}
+    completed = set()
+
+    while len(completed) < len(processes):
+        ready = [p for p in processes if arrival[p[0]] <= time and rem_bt[p[0]] > 0]
+        if not ready:
+            time += 1
+            continue
+        ready.sort(key=lambda x: rem_bt[x[0]])
+        pid = ready[0][0]
+
+        # run for 1 ms
+        time += 1
+        rem_bt[pid] -= 1
+
+        # If process finished
+        if rem_bt[pid] == 0:
+            tat[pid] = time - arrival[pid]
+            bt = next(p[2] for p in processes if p[0] == pid)
+            wt[pid] = tat[pid] - bt
+            completed.add(pid)
+
+    print_table(processes, tat, wt, time)
+
+    
+# ---------------- Round Robin ----------------
+def round_robin(processes, quantum):
+    time = 0
+    rem_bt = {p[0]: p[2] for p in processes}    # remaining burst times
+    arrival = {p[0]: p[1] for p in processes}  # arrival times
+    bt = {p[0]: p[2] for p in processes}        # original burst times
+    tat, wt, ct = {}, {}, {}
+    completed = set()
+    ready = []
+
+    processes = sorted(processes, key=lambda x: x[1])  # sort by arrival
+
+    while len(completed) < len(processes):
+        # add newly arrived processes
+        for p in processes:
+            if (
+                p[0] not in completed
+                and p[0] not in ready
+                and arrival[p[0]] <= time
+                and rem_bt[p[0]] > 0
+            ):
+                ready.append(p[0])
+
+        if not ready:
+            time += 1
+            continue
+
+        pid = ready.pop(0)
+        slice_time = min(quantum, rem_bt[pid])
+        
+        rem_bt[pid] -= slice_time
+        time += slice_time
+
+        # check arrivals during execution
+        for p in processes:
+            if (
+                p[0] not in completed
+                and p[0] not in ready
+                and arrival[p[0]] < time
+                and rem_bt[p[0]] > 0
+            ):
+                ready.append(p[0])
+
+        if rem_bt[pid] == 0:  # finished
+            ct[pid] = time
+            tat[pid] = ct[pid] - arrival[pid]
+            wt[pid] = tat[pid] - bt[pid]
+            completed.add(pid)
+        else:  # requeue unfinished
+            ready.append(pid)
+
+    print_table(processes, tat, wt, time)
+
+
+# ---------------- Main ----------------
+if n == 1:
+    round_robin(processes, quantum)
+elif n == 2:
+    sjf_preemptive(processes)
+elif n == 3:
+    sjf_non_preemptive(processes)
+elif n == 4:
+    fcfs(processes)
+else:
+    print("Invalid choice!")
+
+
+2) PRIORITY
+
+# Processes: [PID, Arrival, Burst, Priority]
+processes = [
+    [1, 0, 4, 2],
+    [2, 1, 2, 1],
+    [3, 2, 6, 3],
+    [4, 3, 3, 1]
+]
+
+# ---------------- Utility Functions ----------------
+
+def print_table(processes, tat, wt, total_time):
+    """
+    Prints the scheduling results in a formatted table.
+    """
+    print("\nProcess\tArrival\tBurst\tPriority\tTAT\tWT")
+    for p in sorted(processes, key=lambda x: x[0]):
+        print("P{}\t{}\t{}\t{}\t\t{}\t{}".format(p[0], p[1], p[2], p[3], tat[p[0]], wt[p[0]]))
+
+    total_tat = sum(tat.values())
+    total_wt = sum(wt.values())
+    avg_tat = total_tat / len(processes)
+    avg_wt = total_wt / len(processes)
+
+    print(f"\nTotal Turnaround Time: {total_tat}")
+    print(f"Average Turnaround Time: {avg_tat:.2f}")
+    print(f"Total Waiting Time: {total_wt}")
+    print(f"Average Waiting Time: {avg_wt:.2f}")
+    print(f"Total Execution Time: {total_time}")
+
+# ---------------- Preemptive Priority Scheduling ----------------
+def preemptive_priority(processes):
+    """
+    Simulates Preemptive Priority Scheduling.
+    """
+    time = 0
+    tat, wt = {}, {}
+    rem_bt = {p[0]: p[2] for p in processes}
+    arrival = {p[0]: p[1] for p in processes}
+    priority = {p[0]: p[3] for p in processes}
+    completed = set()
+
+    while len(completed) < len(processes):
+        ready = [p for p in processes if arrival[p[0]] <= time and rem_bt[p[0]] > 0]
+        if not ready:
+            time += 1
+            continue
+        
+        ready.sort(key=lambda x: priority[x[0]])
+        pid = ready[0][0]
+
+        time += 1
+        rem_bt[pid] -= 1
+
+        if rem_bt[pid] == 0:
+            tat[pid] = time - arrival[pid]
+            bt = next(p[2] for p in processes if p[0] == pid)
+            wt[pid] = tat[pid] - bt
+            completed.add(pid)
+
+    print_table(processes, tat, wt, time)
+
+# ---------------- Non-Preemptive Priority Scheduling ----------------
+def non_preemptive_priority(processes):
+    """
+    Simulates Non-Preemptive Priority Scheduling.
+    """
+    time = 0
+    tat, wt = {}, {}
+    ready = []
+    processes_left = processes[:]
+    
+    while processes_left or ready:
+        for p in processes_left[:]:
+            if p[1] <= time:
+                ready.append(p)
+                processes_left.remove(p)
+        
+        if not ready:
+            time += 1
+            continue
+        
+        ready.sort(key=lambda x: x[3])
+        pid, at, bt, prio = ready.pop(0)
+        
+        end = time + bt
+        time = end
+        tat[pid] = end - at
+        wt[pid] = tat[pid] - bt
+    
+    print_table(processes, tat, wt, time)
+
+# ---------------- Main Program ----------------
+if __name__ == "__main__":
+    print("1) Preemptive Priority Scheduling")
+    print("2) Non-Preemptive Priority Scheduling")
+    try:
+        choice = int(input("Enter the scheduling algorithm: "))
+        if choice == 1:
+            preemptive_priority(processes)
+        elif choice == 2:
+            non_preemptive_priority(processes)
+        else:
+            print("Invalid choice!")
+    except ValueError:
+        print("Invalid input. Please enter a number.")
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+PAGE REPLACEMENT ALGORITHMS
+
+def fifo(pages, capacity):
+    print("\n--- FIFO Page Replacement ---")
+    frame = []
+    faults = 0
+
+    for page in pages:
+        if page not in frame:
+            if len(frame) < capacity:
+                frame.append(page)
+            else:
+                frame.pop(0)
+                frame.append(page)
+            faults += 1
+        print(f"Page: {page} -> Frames: {frame}")
+
+    print(f"Total Page Faults (FIFO): {faults}")
+
+
+def lru(pages, capacity):
+    print("\n--- LRU Page Replacement ---")
+    frame = []
+    recent = {}
+    faults = 0
+    time = 0
+
+    for page in pages:
+        time += 1
+        if page not in frame:
+            if len(frame) < capacity:
+                frame.append(page)
+            else:
+                # Filter only pages currently in frame before finding least recently used
+                lru_page = min(frame, key=lambda p: recent.get(p, 0))
+                frame.remove(lru_page)
+                frame.append(page)
+            faults += 1
+        # Update recent usage time
+        recent[page] = time
+        print(f"Page: {page} -> Frames: {frame}")
+
+    print(f"Total Page Faults (LRU): {faults}")
+
+
+def optimal(pages, capacity):
+    print("\n--- Optimal Page Replacement ---")
+    frame = []
+    faults = 0
+
+    for i in range(len(pages)):
+        page = pages[i]
+        if page not in frame:
+            if len(frame) < capacity:
+                frame.append(page)
+            else:
+                future = pages[i + 1:]
+                farthest = -1
+                replace_index = -1
+
+                for f in frame:
+                    if f not in future:
+                        replace_index = frame.index(f)
+                        break
+                    else:
+                        next_use = future.index(f)
+                        if next_use > farthest:
+                            farthest = next_use
+                            replace_index = frame.index(f)
+
+                frame[replace_index] = page
+            faults += 1
+        print(f"Page: {page} -> Frames: {frame}")
+
+    print(f"Total Page Faults (Optimal): {faults}")
+
+
+# Main Program
+if __name__ == "__main__":
+    pages = [7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2]
+    capacity = 3
+
+    print("Reference String:", pages)
+    print("Frame Capacity:", capacity)
+
+    fifo(pages, capacity)
+    lru(pages, capacity)
+    optimal(pages, capacity)
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+THREADS
+
+1) STARTING A THREAD
+import threading, time
+
+def task(name):
+    print(f"Thread started for {name}")
+    time.sleep(1)
+    print(f"Thread end for {name}")
+
+# Start threads directly
+threading.Thread(target=task, args=("function 1",)).start()
+threading.Thread(target=task, args=("function 2",)).start()
+
+2) DAEMON THREAD
+import threading, time
+
+def worker():
+    while True:
+        print("Daemon thread is running...")
+        time.sleep(1)
+
+t = threading.Thread(target=worker, daemon=True)
+t.start()
+
+print("Main thread will sleep for 3 seconds...")
+time.sleep(3)
+
+print("Main thread finished!")
+
+3) USING JOIN
+import threading, time
+
+def child():
+    time.sleep(5)
+    print("Child thread has completed its work.")
+
+t = threading.Thread(target=child)
+t.start()
+t.join()
+
+print("Parent thread has completed its work.")
+
+4) THREAD POOL EXECUTOR
+from concurrent.futures import ThreadPoolExecutor
+import time
+
+def task(n):
+    time.sleep(1)
+    return f"Thread task {n} done"
+
+with ThreadPoolExecutor(max_workers=3) as executor:
+    results = executor.map(task, range(5))
+    for r in results:
+        print(r)
+
+5) PROCESS POOL EXECUTOR
+from concurrent.futures import ProcessPoolExecutor
+import time, os
+
+def task(n):
+    time.sleep(1)
+    return f"Process {os.getpid()} finished task {n}"
+
+with ProcessPoolExecutor(max_workers=3) as executor:
+    results = executor.map(task, range(5))
+    for r in results:
+        print(r)
+
+6) DIFFERENT PARAMETERS TO THREADS
+#)Passing Different Parameters to Threads
+import threading
+
+def greet(name, age):
+    print(f"Hello {name}, age {age}")
+
+# Create threads with args directly
+t1 = threading.Thread(target=greet, args=("Alice", 21))
+t2 = threading.Thread(target=greet, args=("Bob", 25))
+
+t1.start()
+t2.start()
+
+t1.join()
+t2.join()
+
+7) STARTING MULTIPLE THREADS
+import threading
+import time
+
+def task():
+    for i in range(5):
+        print(f"Task  is running... step {i+1}")
+        time.sleep(1)
+
+# Create two separate tasks (threads)
+thread1 = threading.Thread(target=task)
+thread2 = threading.Thread(target=task)
+
+# Start both threads at the same time
+thread1.start()
+thread2.start()
+
+
+print("Both tasks started simultaneously!")
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+FILE ALLOCATION METHODS
+
+1) CONTINGOUS ALLOCATION
+class ContiguousAllocation:
+    def __init__(self, size):
+        self.disk = [0] * size
+
+    def allocate(self, start, length):
+        if 1 in self.disk[start:start + length]:
+            print("Cannot allocate! Blocks already used.")
+            return
+        for i in range(start, start + length):
+            self.disk[i] = 1
+        print(f"Allocated from {start} to {start + length - 1}")
+
+    def show(self):
+        print(self.disk)
+
+
+# Example
+c = ContiguousAllocation(10)
+c.allocate(2, 4)
+c.allocate(6, 3)
+c.show()
+
+
+2) INDEXED FILE ALLOCATION
+class IndexedAllocation:
+    def __init__(self, size):
+        self.disk = [0] * size
+
+    def allocate(self, index, blocks):
+        if self.disk[index] == 1:
+            print("Index block used")
+            return
+        
+        if any(self.disk[b] == 1 for b in blocks):
+            print("Some data blocks used")
+            return
+
+        self.disk[index] = 1
+        for b in blocks:
+            self.disk[b] = 1
+
+        print(f"Index {index} → blocks {blocks}")
+
+    def show(self):
+        print(self.disk)
+
+
+# Example
+i = IndexedAllocation(12)
+i.allocate(2, [5, 6, 8])
+i.allocate(4, [7, 9, 10])
+i.show()
+
+
+3) LINKED ALLOCATION 
+class LinkedAllocation:
+    def __init__(self, size):
+        self.disk = [None] * size
+
+    def allocate(self, blocks):
+        for i in range(len(blocks) - 1):
+            self.disk[blocks[i]] = blocks[i + 1]
+        self.disk[blocks[-1]] = -1
+        print("Linked:", blocks)
+
+    def show(self):
+        print(self.disk)
+
+
+# Example
+l = LinkedAllocation(10)
+l.allocate([1, 5, 8, 3])
+l.allocate([0, 2, 7])
+l.show()
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+DEADLOCK DETECTION AND AVOIDANCE
+
+1) BANKERS ALGORITHM ( SAFE SEQUENCE )
+
+n = 3
+m = 3
+
+alloc = [
+    [0, 1, 0],  # P0
+    [2, 0, 0],  # P1
+    [3, 0, 2],  # P2
+]
+
+max_need = [
+    [7, 5, 3],  # P0
+    [3, 2, 2],  # P1
+    [9, 0, 2],  # P2
+]
+
+avail = [4, 4, 2]  # <-- changed this
+
+need = [[max_need[i][j] - alloc[i][j] for j in range(m)] for i in range(n)]
+finish = [False] * n
+safe_seq = []
+
+while len(safe_seq) < n:
+    done_something = False
+    for i in range(n):
+        if not finish[i] and all(need[i][j] <= avail[j] for j in range(m)):
+            for j in range(m):
+                avail[j] += alloc[i][j]
+            finish[i] = True
+            safe_seq.append(f"P{i}")
+            done_something = True
+    if not done_something:
+        break
+
+if len(safe_seq) == n:
+    print("System is in SAFE state.")
+    print("Safe sequence:", " -> ".join(safe_seq))
+else:
+    print("System is NOT in a safe state.")
+
+
+2) PETERSONS ALGORITHM
+import threading
+import time
+N = 2
+flag = [False] * N
+turn = 0
+MAX_ITERATIONS = 5  # Each process enters CS 5 times
+
+def process(id):
+    global turn
+    other = 1 - id
+
+    for i in range(MAX_ITERATIONS):
+        # Entry Section
+        flag[id] = True
+        turn = other
+        while flag[other] and turn == other:
+            pass  # Busy wait until it's safe
+
+        # Critical Section
+        print(f"Process {id} is in critical section (iteration {i+1})")
+        time.sleep(0.5)  # Simulate some work
+
+        # Exit Section
+        flag[id] = False
+
+        # Remainder Section
+        print(f"Process {id} is in remainder section (iteration {i+1})")
+        time.sleep(0.5)
+
+if __name__ == "__main__":
+    t1 = threading.Thread(target=process, args=(0,))
+    t2 = threading.Thread(target=process, args=(1,))
+
+    t1.start()
+    t2.start()
+
+    t1.join()
+    t2.join()
+
+    print("\nBoth processes have completed their critical sections.")
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+SYNCHRONIZATION PROBLEMS
+
+1)DINING PHILOSOPHERS USING SEMAPHORES
+
+import threading
+import time
+from threading import Semaphore
+
+running = True   # Global stop condition
+N = 5
+chopstick = [Semaphore(1) for _ in range(N)]
+
+def philosopher(id):
+    while running:
+        print(f'Philosopher {id} is thinking...')
+        time.sleep(1)
+
+        chopstick[id].acquire()
+        chopstick[(id + 1) % N].acquire()
+
+        print(f'Philosopher {id} is eating...')
+        time.sleep(1)
+
+        chopstick[id].release()
+        chopstick[(id + 1) % N].release()
+
+        print(f'Philosopher {id} finished eating.')
+
+threads = []
+
+for i in range(N):
+    t = threading.Thread(target=philosopher, args=(i,), daemon=True)
+    threads.append(t)
+    t.start()
+
+print("Running philosophers for 10 seconds...")
+time.sleep(10)
+
+running = False  # Stop all loops
+print("\nStopping philosophers...")
+
+time.sleep(2) # wait for threads to exit
+print("Stopped.")
+
+
+2) PRODUCER AND CONSUMER USING SEMAPHORE 
+import threading
+import time
+import random
+
+BUFFER_SIZE = 3
+buffer = []
+
+empty = threading.Semaphore(BUFFER_SIZE)  # how many empty slots
+full  = threading.Semaphore(0)            # how many filled slots
+mutex = threading.Semaphore(1)            # for mutual exclusion
+
+
+def producer():
+    for i in range(5):
+        item = random.randint(1, 100)
+
+        empty.acquire()       # wait for empty slot
+        mutex.acquire()       # enter critical section
+
+        buffer.append(item)
+        print(f"Producer produced {item}, buffer = {buffer}")
+
+        mutex.release()       # leave critical section
+        full.release()        # one more full slot
+
+        time.sleep(0.3)
+
+
+def consumer():
+    for i in range(5):
+        full.acquire()        # wait for available item
+        mutex.acquire()       # enter critical section
+
+        item = buffer.pop(0)
+        print(f"Consumer consumed {item}, buffer = {buffer}")
+
+        mutex.release()       # leave critical section
+        empty.release()       # one more empty slot
+
+        time.sleep(0.5)
+
+
+if __name__ == "__main__":    # <-- fixed this line
+    t1 = threading.Thread(target=producer)
+    t2 = threading.Thread(target=consumer)
+
+    t1.start()
+    t2.start()
+
+    t1.join()
+    t2.join()
+
+3) PRODUCER CONSUMER USING THREADING
+import threading
+import queue
+import time
+import random
+
+BUFFER_SIZE = 3
+q = queue.Queue(maxsize=BUFFER_SIZE)
+
+def producer():
+    for i in range(5):
+        item = random.randint(1, 100)
+        q.put(item)   # blocks if queue is full
+        print(f"Producer produced {item}, size={q.qsize()}")
+        time.sleep(0.3)
+
+def consumer():
+    for i in range(5):
+        item = q.get()   # blocks if queue is empty
+        print(f"Consumer consumed {item}, size={q.qsize()}")
+        time.sleep(0.5)
+        q.task_done()
+
+if __name__ == "__main__":  # <-- fixed here
+    t1 = threading.Thread(target=producer)
+    t2 = threading.Thread(target=consumer)
+
+    t1.start()
+    t2.start()
+
+    t1.join()
+    t2.join()
+
+    print("Queue-based Producer-Consumer finished")
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+IPC MECHANISMS
+
+1)ONE WAY PIPES
+
+# pipe_oneway_fork.py
+import os
+
+def main():
+    rfd, wfd = os.pipe()     # rfd = read end, wfd = write end
+    pid = os.fork()
+
+    if pid == 0:
+        # Child process
+        os.close(wfd)        # child doesn't write
+        msg = os.read(rfd, 1024).decode()
+        os.close(rfd)
+        print(f"[Child] PID = {os.getpid()}, PPID = {os.getppid()}")
+        print(f"[Child] Received: '{msg}'")
+        os._exit(0)
+    else:
+        # Parent process
+        os.close(rfd)        # parent doesn't read
+        message = "Hello Child from Parent!"
+        os.write(wfd, message.encode())
+        os.close(wfd)
+        os.waitpid(pid, 0)
+        print("[Parent] Child finished.")
+
+if __name__ == "__main__":
+    main()
+
+2)TWO WAY PIPES
+
+# pipe_twoway_fork.py
+import os
+
+def main():
+    # Parent to Child (P→C), Child to Parent (C→P)
+    p2c_r, p2c_w = os.pipe()
+    c2p_r, c2p_w = os.pipe()
+
+    pid = os.fork()
+
+    if pid == 0:
+        # ---------- Child ----------
+        os.close(p2c_w)  # child doesn't write to P→C
+        os.close(c2p_r)  # child doesn't read from C→P
+
+        msg = os.read(p2c_r, 1024).decode()
+        os.close(p2c_r)
+        print(f"[Child] PID = {os.getpid()}, PPID = {os.getppid()}")
+        print(f"[Child] Received from parent: '{msg}'")
+
+        reply = "Hi Parent, I am your Child!"
+        os.write(c2p_w, reply.encode())
+        os.close(c2p_w)
+
+        os._exit(0)
+
+    else:
+        # ---------- Parent ----------
+        os.close(p2c_r)  # parent doesn't read from P→C
+        os.close(c2p_w)  # parent doesn't write to C→P
+
+        message = "Hello Child, this is Parent!"
+        os.write(p2c_w, message.encode())
+        os.close(p2c_w)
+
+        reply = os.read(c2p_r, 1024).decode()
+        os.close(c2p_r)
+
+        print(f"[Parent] Received from child: '{reply}'")
+
+        os.waitpid(pid, 0)
+        print("[Parent] Child finished.")
+
+if __name__ == "__main__":
+    main()
+
+3)SEMAPHORE
+# simple_semaphore.py
+import threading
+import time
+
+sem = threading.Semaphore(2)  # only 2 can enter at once
+
+
+def worker(name):
+    print(name, "waiting")
+    sem.acquire()
+    print(name, "entered critical section")
+    time.sleep(1)
+    print(name, "leaving critical section")
+    sem.release()
+
+
+threads = [threading.Thread(target=worker, args=(f"T{i}",)) for i in range(5)]
+
+for t in threads:
+    t.start()
+for t in threads:
+    t.join()
+
+4)SHARED MEMORY
+# shared_memory_example.py
+from multiprocessing import Process, Value, Array
+import time
+
+def worker(counter, data):
+    for _ in range(5):
+        with counter.get_lock():           # lock around Value
+            counter.value += 1
+        print("Worker sees counter =", counter.value,
+              "array =", list(data))
+        time.sleep(0.2)
+
+
+if __name__ == "__main__":
+    counter = Value('i', 0)          # shared integer
+    data = Array('i', [1, 2, 3, 4])  # shared array
+
+    p1 = Process(target=worker, args=(counter, data))
+    p2 = Process(target=worker, args=(counter, data))
+
+    p1.start()
+    p2.start()
+    p1.join()
+    p2.join()
+
+    print("Final counter =", counter.value)
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Socket programming (save as server.py)
+import socket
+
+def main():
+    ip = "127.0.0.1"
+    port = 5566
+    buffer_size = 1024
+
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    try:
+        server_socket.bind((ip, port))
+        print("[+] TCP server socket created.")
+        print(f"[+] Bound to port {port}")
+
+        server_socket.listen(5)
+        print("Listening for connections...")
+
+        while True:
+            client_socket, client_address = server_socket.accept()
+            print(f"[+] Client connected from {client_address}")
+
+            message = client_socket.recv(buffer_size).decode()
+            print(f"Client: {message}")
+
+            response = "HI, THIS IS SERVER. HAVE A NICE DAY!!!"
+            print(f"Server: {response}")
+            client_socket.send(response.encode())
+
+            client_socket.close()
+            print("[+] Client disconnected.\n")
+
+    except Exception as e:
+        print(f"[-] Error: {e}")
+
+    finally:
+        server_socket.close()
+
+if __name__ == "__main__":
+    main()
+
+
+#Client Code (save as client.py)
+
+import socket
+
+def main():
+    ip = "127.0.0.1"
+    port = 5566
+    buffer_size = 1024
+
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    try:
+        client_socket.connect((ip, port))
+        print("[+] Connected to the server.")
+
+        message = "HELLO, THIS IS CLIENT."
+        print(f"Client: {message}")
+        client_socket.send(message.encode())
+
+        response = client_socket.recv(buffer_size).decode()
+        print(f"Server: {response}")
+
+    except Exception as e:
+        print(f"[-] Error: {e}")
+
+    finally:
+        client_socket.close()
+        print("[+] Disconnected from the server.")
+
+if __name__ == "__main__":
+    main()
+
+
+
+# Open Terminal and type (run it in terminal)
+
+python3 server.py
+python3 client.py
+
+
+-------------------------------------------------------------------------------------------------------------------
+
+#sbrk ( C code)
+
+
+#include <stdio.h>
+#include <unistd.h>
+
+int main() {
+    void *initial_break, *new_break;
+
+    // Get initial program break
+    initial_break = sbrk(0);
+    printf("Initial program break: %p\n", initial_break);
+
+    // Increase heap by 20 bytes
+    sbrk(20);
+
+    // Get new program break
+    new_break = sbrk(0);
+    printf("Program break after sbrk(20): %p\n", new_break);
+
+    // Allocate more memory
+    sbrk(50);
+    new_break = sbrk(0);
+    printf("Program break after sbrk(50): %p\n", new_break);
+
+    return 0;
+}
+
+-------------------------------------------------------------------------------------------------------------------
+
